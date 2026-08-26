@@ -25,3 +25,30 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Ignorar dependências em subpastas
+**/vendor/
+**/node_modules/
+
+# Arquivos de ambiente em qualquer projeto
+**/.env
+**/.env.backup
+**/.env.production
+**/.env.*
+!**/.env.example
+
+# Builds
+**/public/build/
+**/dist/
+
+# IDEs
+**/.idea/
+**/.vscode/
+**/.cursor/
+
+# Logs
+**/*.log
+
+# Sistema
+**/.DS_Store
+**/Thumbs.db
