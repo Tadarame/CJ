@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('image_path');
             $table->foreignId('category_id')
-                ->contrained()
+                ->constrained()
                 ->cascadeOnDelete();
             $table->timestamps();
         });
