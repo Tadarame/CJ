@@ -3,6 +3,7 @@ import { Fraunces, Inter } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
+import Nav from "./components/Nav";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -29,17 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="font-display text-lg tracking-tight">
               CocadaJak
             </Link>
-            <nav className="flex gap-6 text-sm text-muted">
-              <Link href="/portfolio" className="transition-colors hover:text-foreground">
-                Portfólio
-              </Link>
-              <Link href="/contato" className="transition-colors hover:text-foreground">
-                Contato
-              </Link>
-              <Link href="/login" className="transition-colors hover:text-foreground">
-                Login
-              </Link>
-            </nav>
+            <Nav />
           </header>
           <main className="mx-auto max-w-6xl px-6 sm:px-10">{children}</main>
         </AuthProvider>

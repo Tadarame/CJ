@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
@@ -10,7 +10,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const router = useRouter();
-  const { refresh } = useAuth();
+  const { user, loading, refresh } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/admin");
+    }
+  }, [loading, user, router]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -18,11 +24,15 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      await refresh(); // atualiza o AuthContext com o usuário recém-logado
+      await refresh();
       router.push("/admin");
     } catch {
       setStatus("error");
     }
+  }
+
+  if (loading || user) {
+    return null;
   }
 
   return (

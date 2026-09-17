@@ -15,6 +15,7 @@ export default function AdminFotosPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [eventDate, setEventDate] = useState("");
 
   // Estado do formulário (serve tanto pra criar quanto pra editar)
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -46,12 +47,14 @@ export default function AdminFotosPage() {
     setDescription("");
     setCategoryId("");
     setFile(null);
+    setEventDate("");
   }
 
   function startEdit(photo: Photo) {
     setEditingId(photo.id);
     setTitle(photo.title);
     setDescription(photo.description ?? "");
+    setEventDate(photo.event_date ? photo.event_date.slice(0, 7) : "");
     setCategoryId(String(photo.category_id));
     setFile(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -64,6 +67,7 @@ export default function AdminFotosPage() {
 
     const formData = new FormData();
     formData.append("title", title);
+    if (eventDate) formData.append("event_date", `${eventDate}-01`);
     formData.append("description", description);
     formData.append("category_id", categoryId);
     if (file) formData.append("image", file);
@@ -96,7 +100,10 @@ export default function AdminFotosPage() {
           {editingId ? "Editar foto" : "Nova foto"}
         </h1>
 
-        <form onSubmit={handleSubmit} className="mt-8 flex max-w-lg flex-col gap-5">
+        <form
+          onSubmit={handleSubmit}
+          className="mt-8 flex max-w-lg flex-col gap-5"
+        >
           <div className="flex flex-col gap-2">
             <label className="text-sm text-muted">Título</label>
             <input
@@ -136,6 +143,17 @@ export default function AdminFotosPage() {
               ))}
             </select>
           </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-muted">
+              Mês/ano do evento (opcional)
+            </label>
+            <input
+              type="month"
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+              className="border-b border-border bg-transparent py-2 outline-none focus:border-accent"
+            />
+          </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-muted">
@@ -158,7 +176,11 @@ export default function AdminFotosPage() {
               disabled={saving}
               className="w-fit border border-accent px-6 py-2 text-accent transition-colors hover:bg-accent hover:text-background disabled:opacity-50"
             >
-              {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar foto"}
+              {saving
+                ? "Salvando..."
+                : editingId
+                  ? "Salvar alterações"
+                  : "Cadastrar foto"}
             </button>
             {editingId && (
               <button

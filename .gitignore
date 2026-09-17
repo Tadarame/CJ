@@ -25,6 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+.env.local
 
 # Ignorar dependências em subpastas
 **/vendor/

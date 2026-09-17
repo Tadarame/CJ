@@ -15,6 +15,7 @@ export interface Photo {
     id: number;
     title: string;
     description: string | null;
+    event_date: string | null
     image_path: string;
     category_id: number;
     category?: Category;
@@ -150,4 +151,30 @@ export async function updatePhoto(id: number, formData: FormData): Promise<{ pho
 
 export async function deletePhoto(id: number): Promise<null> {
   return apiFetch<null>(`/api/admin/photos/${id}`, { method: "DELETE" });
+}
+
+export async function createCategory(name: string): Promise<{ category: Category}> {
+  await getCsrfCookie();
+  return apiFetch<{ category: Category}>("/api/admin/categories", {
+    method: "POST",
+    body: JSON.stringify({name}),
+  });
+}
+
+export async function updateCategory(id: number, name: string): Promise<{category: Category}> {
+  await getCsrfCookie();
+  return apiFetch<{category: Category}> (`/api/admin/categories/${id}`, {
+    method : "PUT",
+    body: JSON.stringify({name}),
+  });
+}
+
+export async function deleteCategory(id:number): Promise <null> {
+  return apiFetch<null>(`/api/admin/categories/${id}`, {method: "DELETE"});
+}
+
+export async function getCategories(): Promise<{ categories: Category[] }> {
+  const response = await fetch(`${API_URL}/api/categories`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Erro ao carregar categorias");
+  return response.json();
 }
