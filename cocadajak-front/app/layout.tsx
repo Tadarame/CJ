@@ -1,32 +1,48 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
+import { AuthProvider } from "@/lib/AuthContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  style: ["normal", "italic"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "CocadaJak - Portfólio",
+  title: "CocadaJak — Fotografia",
+  description: "Portfólio fotográfico de CocadaJak.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-br">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <header style={{ display: "flex", gap: "1rem", padding: "1rem" }}>
-          <Link href="/portfolio">Portfólio</Link>
-          <Link href="/contato">Contato</Link>
-          <Link href="/login">Login</Link>
-        </header>
-        <main style={{ padding: "1rem" }}>{children}</main>
+      <body className={`${fraunces.variable} ${inter.variable} antialiased`}>
+        <AuthProvider>
+          <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border/60 bg-background/90 px-6 py-4 backdrop-blur sm:px-10">
+            <Link href="/" className="font-display text-lg tracking-tight">
+              CocadaJak
+            </Link>
+            <nav className="flex gap-6 text-sm text-muted">
+              <Link href="/portfolio" className="transition-colors hover:text-foreground">
+                Portfólio
+              </Link>
+              <Link href="/contato" className="transition-colors hover:text-foreground">
+                Contato
+              </Link>
+              <Link href="/login" className="transition-colors hover:text-foreground">
+                Login
+              </Link>
+            </nav>
+          </header>
+          <main className="mx-auto max-w-6xl px-6 sm:px-10">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

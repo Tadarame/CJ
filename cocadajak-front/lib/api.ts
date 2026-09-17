@@ -20,7 +20,7 @@ export interface Photo {
     category?: Category;
 }
 
-async function getCsrfCookie(): Promise<void> {
+export async function getCsrfCookie(): Promise<void> {
   await fetch(`${API_URL}/sanctum/csrf-cookie`, {
     credentials: 'include',
   });
@@ -78,4 +78,76 @@ export async function getPortfolio(categoryId?: number): Promise<{ photos: Photo
 
   if (!response.ok) throw new Error('Erro ao carregar o portfólio');
   return response.json();
+}
+export interface HomeData {
+  message: string;
+  latest_photo: Photo[];
+}
+
+export async function getHome(): Promise<HomeData> {
+  const response = await fetch(`${API_URL}/api/`, {cache: "no-store"});
+  if (!response.ok) throw new Error("Erro ao carregar a home");
+  return response.json();
+}
+//contato 
+
+export async function sendContact(data: {
+  name: string;
+  email: string;
+  message: string;
+}): Promise<{ message: string }> {
+  await getCsrfCookie(); 
+
+  return apiFetch<{ message: string }>("/api/contato", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+async function apiFetchForm<T>(path: string, formData: FormData): Promise<T> {
+  const xsrfToken = getCookie("XSRF-TOKEN");
+
+  const response = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+      ...(xsrfToken ? { "X-XSRF-TOKEN": xsrfToken } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Erro na requisição");
+  }
+
+  if (response.status === 204) return null as T;
+  return response.json();
+}
+
+export async function getAdminPhotos(): Promise<{ photos: Photo[] }> {
+  return apiFetch<{ photos: Photo[] }>("/api/admin/photos");
+}
+
+export async function getAdminCategories(): Promise<{ categories: Category[] }> {
+  return apiFetch<{ categories: Category[] }>("/api/admin/categories");
+}
+
+export async function createPhoto(formData: FormData): Promise<{ photo: Photo }> {
+  await getCsrfCookie();
+  return apiFetchForm<{ photo: Photo }>("/api/admin/photos", formData);
+}
+
+export async function updatePhoto(id: number, formData: FormData): Promise<{ photo: Photo }> {
+  await getCsrfCookie();
+  // PHP não lê arquivos em requisições PUT/PATCH nativamente,
+  // então mandamos como POST com esse campo "_method" - o Laravel
+  // reconhece isso e trata como se fosse PUT de verdade.
+  formData.append("_method", "PUT");
+  return apiFetchForm<{ photo: Photo }>(`/api/admin/photos/${id}`, formData);
+}
+
+export async function deletePhoto(id: number): Promise<null> {
+  return apiFetch<null>(`/api/admin/photos/${id}`, { method: "DELETE" });
 }
