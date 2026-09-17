@@ -13,6 +13,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/portfolio', [PortfolioController::class, 'index'])
     ->name('portfolio');
 
+Route::get('/categories', [CategoryController::class, 'index'])
+    ->name('categories.index');
+
 Route::post('/contato', [ContactController::class, 'store'])
     ->name('contact.store');
 

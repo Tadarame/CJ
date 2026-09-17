@@ -22,6 +22,7 @@ class PhotoController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category_id' => ['required', 'exists:categories,id'],
+            'event_date' => ['nullable', 'date'],
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
@@ -48,6 +49,7 @@ class PhotoController extends Controller
         $data = $request->validate([
             'title' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'event_date' => ['nullable', 'date'],
             'category_id' => ['sometimes', 'required', 'exists:categories,id'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);

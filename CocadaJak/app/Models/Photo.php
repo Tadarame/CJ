@@ -11,6 +11,7 @@ class Photo extends Model
         'description',
         'image_path',
         'category_id',
+        'event_date'
     ];
 
     public function category()
