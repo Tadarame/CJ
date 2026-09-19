@@ -4,6 +4,7 @@ import Link from "next/link";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
 import Nav from "./components/Nav";
+import Footer from "./components/Footer";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Nav />
           </header>
           <main className="mx-auto max-w-6xl px-6 sm:px-10">{children}</main>
+          <Footer />
         </AuthProvider>
       </body>
     </html>

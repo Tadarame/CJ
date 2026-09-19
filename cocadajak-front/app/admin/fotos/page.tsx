@@ -207,7 +207,7 @@ export default function AdminFotosPage() {
             {photos.map((photo) => (
               <div key={photo.id} className="flex flex-col gap-2">
                 <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.image_path}`}
+                  src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.thumbnail_path ?? photo.image_path}`}
                   alt={photo.title}
                   className="aspect-square w-full object-cover"
                 />

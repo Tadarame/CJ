@@ -11,6 +11,9 @@ export default function Nav() {
       <Link href="/portfolio" className="transition-colors hover:text-foreground">
         Portfólio
       </Link>
+      <Link href="/sobre" className="transition-colors hover:text-foreground">
+        Sobre
+      </Link>
       <Link href="/contato" className="transition-colors hover:text-foreground">
         Contato
       </Link>
@@ -20,10 +23,7 @@ export default function Nav() {
           <Link href="/admin" className="transition-colors hover:text-foreground">
             Admin
           </Link>
-          <button
-            onClick={logout}
-            className="transition-colors hover:text-foreground"
-          >
+          <button onClick={logout} className="transition-colors hover:text-foreground">
             Sair
           </button>
         </>

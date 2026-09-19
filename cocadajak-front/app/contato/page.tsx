@@ -28,19 +28,43 @@ export default function ContatoPage() {
   }
 
   return (
-    <div className="max-w-lg py-16 sm:py-24">
-      <h1 className="font-display text-3xl italic sm:text-4xl">Contato</h1>
-      <p className="mt-4 text-muted">
-        Conta um pouco sobre o que você precisa — retrato, evento, ensaio — e
-        eu respondo em breve.
-      </p>
+    <div className="grid gap-16 py-16 sm:grid-cols-2 sm:py-24">
+      <div className="max-w-md">
+        <h1 className="font-display text-3xl italic sm:text-4xl">Contato</h1>
+        <p className="mt-4 text-muted">
+          Conta um pouco sobre o que você precisa — retrato, evento, ensaio —
+          e eu respondo em breve.
+        </p>
+
+        <dl className="mt-10 flex flex-col gap-4 text-sm">
+          <div>
+            <dt className="text-muted">Email</dt>
+            <dd className="mt-1">admin@cocadajak.com</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Atendimento</dt>
+            <dd className="mt-1">Todo o Brasil, sob agenda</dd>
+          </div>
+        </dl>
+
+        <a
+          href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+            "Olá! Vim pelo site e gostaria de saber mais sobre seus trabalhos."
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-8 inline-block w-fit border border-accent px-6 py-2 text-accent transition-colors hover:bg-accent hover:text-background"
+        >
+          Chamar no WhatsApp
+        </a>
+      </div>
 
       {status === "sent" ? (
-        <p className="mt-10 border border-border p-6 text-accent">
+        <p className="h-fit border border-border p-6 text-accent">
           Mensagem enviada com sucesso. Obrigado pelo contato!
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-10 flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label htmlFor="name" className="text-sm text-muted">
               Nome

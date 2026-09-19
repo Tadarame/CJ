@@ -5,10 +5,11 @@ import PhotoGrid from "./PhotoGrid";
 export default async function PortfolioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; highlight?: string }>;
 }) {
-  const { category } = await searchParams;
+  const { category, highlight } = await searchParams;
   const categoryId = category ? Number(category) : undefined;
+  const highlightId = highlight ? Number(highlight) : undefined;
 
   const [{ photos }, { categories }] = await Promise.all([
     getPortfolio(categoryId),
@@ -22,7 +23,11 @@ export default async function PortfolioPage({
       <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <Link
           href="/portfolio"
-          className={!categoryId ? "text-accent" : "text-muted transition-colors hover:text-foreground"}
+          className={
+            !categoryId
+              ? "text-accent"
+              : "text-muted transition-colors hover:text-foreground"
+          }
         >
           Todas
         </Link>
@@ -40,11 +45,13 @@ export default async function PortfolioPage({
           </Link>
         ))}
       </div>
-    {photos.length === 0 ? (
-      <p className="mt-10 text-muted">Nenhuma foto encontrada nessa categoria.</p>
-    ) : (
-      <PhotoGrid photos={photos} />
-    )}
+      {photos.length === 0 ? (
+        <p className="mt-10 text-muted">
+          Nenhuma foto encontrada nessa categoria.
+        </p>
+      ) : (
+        <PhotoGrid photos={photos} highlightId={highlightId} />
+      )}
     </div>
   );
 }

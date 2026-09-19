@@ -8,42 +8,59 @@ export default async function Home() {
     const data = await getHome();
     latestPhotos = data.latest_photos;
   } catch {
-    // API fora do ar não deve quebrar a home — só não mostra a prévia
+    // API fora do ar não deve quebrar a home
   }
 
+  const featured = latestPhotos[0];
+
   return (
-    <div className="flex flex-col gap-16 py-16 sm:py-24">
+    <div className="grid gap-16 py-16 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-12">
       <section className="max-w-2xl">
-        <h1 className="font-display text-4xl italic leading-tight sm:text-6xl">
+        <span className="text-sm text-accent">Fotografia</span>
+        <h1 className="mt-3 font-display text-5xl italic leading-[1.05] sm:text-7xl">
           Imagens que ficam.
         </h1>
         <p className="mt-6 max-w-md text-base text-muted sm:text-lg">
           Retratos, eventos e paisagens registrados por CocadaJak. Cada
           trabalho é uma tentativa de guardar um instante direito.
         </p>
-        <Link
-          href="/portfolio"
-          className="mt-8 inline-block border-b border-accent pb-1 text-accent transition-colors hover:text-foreground hover:border-foreground"
-        >
-          Ver o portfólio completo
-        </Link>
+        <div className="mt-8 flex gap-6 text-sm">
+          <Link
+            href="/portfolio"
+            className="border-b border-accent pb-1 text-accent transition-colors hover:border-foreground hover:text-foreground"
+          >
+            Ver o portfólio completo
+          </Link>
+          <Link
+            href="/contato"
+            className="border-b border-border pb-1 text-muted transition-colors hover:border-foreground hover:text-foreground"
+          >
+            Fazer um orçamento
+          </Link>
+        </div>
       </section>
 
-      {latestPhotos.length > 0 && (
-        <section>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {latestPhotos.slice(0, 3).map((photo) => (
-              <figure key={photo.id} className="overflow-hidden">
-                <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.image_path}`}
-                  alt={photo.title}
-                  loading="lazy"
-                  className="h-64 w-full object-cover"
-                />
-              </figure>
-            ))}
-          </div>
-        </section>
+      {featured && (
+        <Link
+          href={`/portfolio?highlight=${featured.id}`}
+          className="group block"
+        >
+          <figure className="overflow-hidden">
+            <img
+              src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${featured.image_path}`}
+              alt={featured.title}
+              className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <figcaption className="mt-3 flex items-baseline justify-between text-sm">
+              <span className="transition-colors group-hover:text-foreground">
+                {featured.title}
+              </span>
+              {featured.category && (
+                <span className="text-muted">{featured.category.name}</span>
+              )}
+            </figcaption>
+          </figure>
+        </Link>
       )}
     </div>
   );

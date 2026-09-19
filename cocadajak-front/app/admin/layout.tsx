@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
+import Footer from "./components/Footer";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -28,6 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <a href="/admin" className="text-muted hover:text-foreground">Início</a>
         <a href="/admin/fotos" className="text-muted hover:text-foreground">Fotos</a>
         <a href="/admin/categorias" className="text-muted hover:text-foreground">Categorias</a>
+        <a href="/admin/sobre" className="text-muted hover:text-foreground">Sobre</a>
       </nav>
       {children}
     </div>
