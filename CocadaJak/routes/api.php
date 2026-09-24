@@ -11,10 +11,14 @@ use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\EventVideoController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\AboutController as AdminAboutController;
+use App\Http\Controllers\VideoController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
+
+Route::get('/videos/{path}', [VideoController::class, 'show'])
+    ->where('path', '.*');
 
 Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
 
@@ -23,6 +27,7 @@ Route::get('/about', [AboutController::class, 'show'])->name('about.show');
 Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

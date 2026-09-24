@@ -6,16 +6,16 @@ interface VideoCardProps {
 
 export default function VideoCard({ videoUrl }: VideoCardProps) {
   return (
-    <div className="aspect-[9/16] w-full overflow-hidden border border-border bg-black">
-      <video
-        src={videoUrl}
-        controls
-        playsInline
-        preload="metadata"
-        className="h-full w-full object-contain"
-      >
-        Seu navegador não suporta reprodução de vídeo.
-      </video>
+    <div className="flex h-full w-full items-center justify-center bg-black">
+        <video
+            src={videoUrl}
+            controls
+            playsInline
+            preload="metadata"
+            className="max-h-full max-w-full object-contain"
+        >
+            Seu navegador não suporta reprodução de vídeo.
+        </video>
     </div>
   );
 }

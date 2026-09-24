@@ -88,7 +88,7 @@ export default function EventGrid({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="grid max-h-full max-w-4xl gap-6 overflow-y-auto sm:grid-cols-2"
+            className="grid max-h-full max-w-6x1 gap-6 overflow-y-auto sm:grid-cols-2"
           >
             <div className="relative">
               <img
@@ -152,7 +152,7 @@ export default function EventGrid({
                     {selected.videos.map((video) => (
                       <InstagramVideoCard
                         key={video.id}
-                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL}/storage/${video.video_path}`}
+                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.video_path}`}
                       />
                     ))}
                   </div>
