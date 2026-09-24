@@ -3,36 +3,36 @@
 import { useEffect, useState, FormEvent } from "react";
 import {
   Category,
-  Photo,
-  getAdminPhotos,
+  Event,
+  getAdminEvents,
   getAdminCategories,
-  createPhoto,
-  updatePhoto,
-  deletePhoto,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  deleteEventPhoto,
 } from "@/lib/api";
 
-export default function AdminFotosPage() {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+export default function AdminEventosPage() {
+  const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [eventDate, setEventDate] = useState("");
 
-  // Estado do formulário (serve tanto pra criar quanto pra editar)
   const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [eventDate, setEventDate] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   async function loadData() {
     setLoading(true);
-    const [photosRes, categoriesRes] = await Promise.all([
-      getAdminPhotos(),
+    const [eventsRes, categoriesRes] = await Promise.all([
+      getAdminEvents(),
       getAdminCategories(),
     ]);
-    setPhotos(photosRes.photos);
+    setEvents(eventsRes.events);
     setCategories(categoriesRes.categories);
     setLoading(false);
   }
@@ -46,17 +46,17 @@ export default function AdminFotosPage() {
     setTitle("");
     setDescription("");
     setCategoryId("");
-    setFile(null);
     setEventDate("");
+    setFiles([]);
   }
 
-  function startEdit(photo: Photo) {
-    setEditingId(photo.id);
-    setTitle(photo.title);
-    setDescription(photo.description ?? "");
-    setEventDate(photo.event_date ? photo.event_date.slice(0, 7) : "");
-    setCategoryId(String(photo.category_id));
-    setFile(null);
+  function startEdit(event: Event) {
+    setEditingId(event.id);
+    setTitle(event.title);
+    setDescription(event.description ?? "");
+    setCategoryId(String(event.category_id));
+    setEventDate(event.event_date ? event.event_date.slice(0, 7) : "");
+    setFiles([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -67,29 +67,35 @@ export default function AdminFotosPage() {
 
     const formData = new FormData();
     formData.append("title", title);
-    if (eventDate) formData.append("event_date", `${eventDate}-01`);
     formData.append("description", description);
     formData.append("category_id", categoryId);
-    if (file) formData.append("image", file);
+    if (eventDate) formData.append("event_date", `${eventDate}-01`);
+    files.forEach((file) => formData.append("images[]", file));
 
     try {
       if (editingId) {
-        await updatePhoto(editingId, formData);
+        await updateEvent(editingId, formData);
       } else {
-        await createPhoto(formData);
+        await createEvent(formData);
       }
       resetForm();
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar a foto.");
+      setError(err instanceof Error ? err.message : "Erro ao salvar o evento.");
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm("Excluir essa foto? Essa ação não pode ser desfeita.")) return;
-    await deletePhoto(id);
+  async function handleDeleteEvent(id: number) {
+    if (!confirm("Excluir esse evento e TODAS as fotos dele? Essa ação não pode ser desfeita.")) return;
+    await deleteEvent(id);
+    await loadData();
+  }
+
+  async function handleDeletePhoto(eventId: number, photoId: number) {
+    if (!confirm("Excluir essa foto do evento?")) return;
+    await deleteEventPhoto(eventId, photoId);
     await loadData();
   }
 
@@ -97,13 +103,10 @@ export default function AdminFotosPage() {
     <div className="flex flex-col gap-16">
       <section>
         <h1 className="font-display text-3xl italic">
-          {editingId ? "Editar foto" : "Nova foto"}
+          {editingId ? "Editar evento" : "Novo evento"}
         </h1>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 flex max-w-lg flex-col gap-5"
-        >
+        <form onSubmit={handleSubmit} className="mt-8 flex max-w-lg flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label className="text-sm text-muted">Título</label>
             <input
@@ -143,10 +146,9 @@ export default function AdminFotosPage() {
               ))}
             </select>
           </div>
+
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-muted">
-              Mês/ano do evento (opcional)
-            </label>
+            <label className="text-sm text-muted">Mês/ano do evento (opcional)</label>
             <input
               type="month"
               value={eventDate}
@@ -157,15 +159,19 @@ export default function AdminFotosPage() {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-muted">
-              Imagem {editingId && "(deixe em branco pra manter a atual)"}
+              {editingId ? "Adicionar mais fotos (opcional)" : "Fotos"}
             </label>
             <input
               type="file"
               accept="image/*"
+              multiple
               required={!editingId}
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
               className="text-sm text-muted"
             />
+            {files.length > 0 && (
+              <span className="text-xs text-muted">{files.length} arquivo(s) selecionado(s)</span>
+            )}
           </div>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
@@ -176,11 +182,7 @@ export default function AdminFotosPage() {
               disabled={saving}
               className="w-fit border border-accent px-6 py-2 text-accent transition-colors hover:bg-accent hover:text-background disabled:opacity-50"
             >
-              {saving
-                ? "Salvando..."
-                : editingId
-                  ? "Salvar alterações"
-                  : "Cadastrar foto"}
+              {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar evento"}
             </button>
             {editingId && (
               <button
@@ -196,38 +198,50 @@ export default function AdminFotosPage() {
       </section>
 
       <section>
-        <h2 className="font-display text-2xl italic">Fotos cadastradas</h2>
+        <h2 className="font-display text-2xl italic">Eventos cadastrados</h2>
 
         {loading ? (
           <p className="mt-6 text-muted">Carregando...</p>
-        ) : photos.length === 0 ? (
-          <p className="mt-6 text-muted">Nenhuma foto cadastrada ainda.</p>
+        ) : events.length === 0 ? (
+          <p className="mt-6 text-muted">Nenhum evento cadastrado ainda.</p>
         ) : (
-          <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-            {photos.map((photo) => (
-              <div key={photo.id} className="flex flex-col gap-2">
-                <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.thumbnail_path ?? photo.image_path}`}
-                  alt={photo.title}
-                  className="aspect-square w-full object-cover"
-                />
-                <div className="flex items-baseline justify-between text-sm">
-                  <span>{photo.title}</span>
-                  <span className="text-muted">{photo.category?.name}</span>
+          <div className="mt-6 flex flex-col gap-10">
+            {events.map((event) => (
+              <div key={event.id} className="border-b border-border pb-8">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <h3 className="text-lg">{event.title}</h3>
+                    <span className="text-sm text-muted">{event.category?.name}</span>
+                  </div>
+                  <div className="flex gap-3 text-sm">
+                    <button onClick={() => startEdit(event)} className="text-accent hover:underline">
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(event.id)}
+                      className="text-red-400 hover:underline"
+                    >
+                      Excluir evento
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-3 text-sm">
-                  <button
-                    onClick={() => startEdit(photo)}
-                    className="text-accent hover:underline"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(photo.id)}
-                    className="text-red-400 hover:underline"
-                  >
-                    Excluir
-                  </button>
+
+                <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+                  {event.photos.map((photo) => (
+                    <div key={photo.id} className="group relative">
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.thumbnail_path ?? photo.image_path}`}
+                        alt={event.title}
+                        className="aspect-square w-full object-cover"
+                      />
+                      <button
+                        onClick={() => handleDeletePhoto(event.id, photo.id)}
+                        className="absolute right-1 top-1 bg-background/80 px-2 py-1 text-xs text-red-400 opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}

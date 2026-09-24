@@ -2,16 +2,17 @@ import Link from "next/link";
 import { getHome } from "@/lib/api";
 
 export default async function Home() {
-  let latestPhotos: Awaited<ReturnType<typeof getHome>>["latest_photos"] = [];
+  let latestEvents: Awaited<ReturnType<typeof getHome>>["latest_events"] = [];
 
   try {
     const data = await getHome();
-    latestPhotos = data.latest_photos;
+    latestEvents = data.latest_events;
   } catch {
     // API fora do ar não deve quebrar a home
   }
 
-  const featured = latestPhotos[0];
+  const featured = latestEvents[0];
+  const featuredCover = featured?.photos[0];
 
   return (
     <div className="grid gap-16 py-16 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-12">
@@ -40,14 +41,11 @@ export default async function Home() {
         </div>
       </section>
 
-      {featured && (
-        <Link
-          href={`/portfolio?highlight=${featured.id}`}
-          className="group block"
-        >
+      {featured && featuredCover && (
+        <Link href={`/portfolio?highlight=${featured.id}`} className="group block">
           <figure className="overflow-hidden">
             <img
-              src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${featured.image_path}`}
+              src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${featuredCover.thumbnail_path ?? featuredCover.image_path}`}
               alt={featured.title}
               className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />

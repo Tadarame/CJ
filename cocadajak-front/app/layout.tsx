@@ -18,8 +18,24 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CocadaJak — Fotografia",
-  description: "Portfólio fotográfico de CocadaJak.",
+  metadataBase: new URL("https://cocadajak.com"), // troque pelo seu domínio real quando tiver
+  title: {
+    default: "CocadaJak — Fotografia",
+    template: "%s | CocadaJak",
+  },
+  description:
+    "Portfólio fotográfico de CocadaJak — retratos, eventos e paisagens.",
+  openGraph: {
+    title: "CocadaJak — Fotografia",
+    description:
+      "Portfólio fotográfico de CocadaJak — retratos, eventos e paisagens.",
+    images: ["/og-image.jpg"],
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

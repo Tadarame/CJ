@@ -1,4 +1,14 @@
 import { getAbout } from "@/lib/api";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sobre",
+  description: "Conheça CocadaJak e o equipamento usado nos trabalhos.",
+  openGraph: {
+    title: "Sobre | CocadaJak",
+    description: "Conheça CocadaJak e o equipamento usado nos trabalhos.",
+  },
+};
 
 export default async function SobrePage() {
   const { about, photo_url } = await getAbout();

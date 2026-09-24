@@ -10,9 +10,9 @@ class Category extends Model
         'name',
     ];    
 
-    public function photos()
+    public function events()
     {
-       return $this->hasMany(Photo::class) ;
+        return $this->hasMany(Event::class);
     }
     
 }

@@ -1,6 +1,16 @@
 import Link from "next/link";
 import { getPortfolio, getCategories } from "@/lib/api";
-import PhotoGrid from "./PhotoGrid";
+import EventGrid from "./EventGrid";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Portfólio",
+  description: "Veja os trabalhos de fotografia de CocadaJak, organizados por categoria.",
+  openGraph: {
+    title: "Portfólio | CocadaJak",
+    description: "Veja os trabalhos de fotografia de CocadaJak, organizados por categoria.",
+  },
+};
 
 export default async function PortfolioPage({
   searchParams,
@@ -11,7 +21,7 @@ export default async function PortfolioPage({
   const categoryId = category ? Number(category) : undefined;
   const highlightId = highlight ? Number(highlight) : undefined;
 
-  const [{ photos }, { categories }] = await Promise.all([
+  const [{ events }, { categories }] = await Promise.all([
     getPortfolio(categoryId),
     getCategories(),
   ]);
@@ -23,11 +33,7 @@ export default async function PortfolioPage({
       <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <Link
           href="/portfolio"
-          className={
-            !categoryId
-              ? "text-accent"
-              : "text-muted transition-colors hover:text-foreground"
-          }
+          className={!categoryId ? "text-accent" : "text-muted transition-colors hover:text-foreground"}
         >
           Todas
         </Link>
@@ -45,12 +51,11 @@ export default async function PortfolioPage({
           </Link>
         ))}
       </div>
-      {photos.length === 0 ? (
-        <p className="mt-10 text-muted">
-          Nenhuma foto encontrada nessa categoria.
-        </p>
+
+      {events.length === 0 ? (
+        <p className="mt-10 text-muted">Nenhum trabalho encontrado nessa categoria.</p>
       ) : (
-        <PhotoGrid photos={photos} highlightId={highlightId} />
+        <EventGrid events={events} highlightId={highlightId} />
       )}
     </div>
   );

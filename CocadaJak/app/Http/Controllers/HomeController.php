@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Photo;
+use App\Models\Event;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $latestPhotos = Photo::with('category')
+        $latestEvents = Event::with(['category', 'photos'])
             ->latest()
-            ->take(6)
+            ->take(3)
             ->get();
 
         return response()->json([
             'message' => 'API do portfólio no ar',
-            'latest_photos' => $latestPhotos,
+            'latest_events' => $latestEvents,
         ]);
     }
 }

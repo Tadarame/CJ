@@ -1,37 +1,11 @@
-"use client";
+import type { Metadata } from "next";
+import AdminGuard from "./AdminGuard";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/AuthContext";
-import Footer from "./components/Footer";
+export const metadata: Metadata = {
+  title: "Admin",
+  robots: { index: false, follow: false },
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [loading, user, router]);
-
-  if (loading) {
-    return <p className="py-16 text-muted">Carregando...</p>;
-  }
-
-  if (!user) {
-    return null; // evita piscar conteúdo protegido antes do redirect
-  }
-
-    return (
-    <div className="py-10">
-      <nav className="mb-10 flex gap-6 border-b border-border pb-4 text-sm">
-        <a href="/admin" className="text-muted hover:text-foreground">Início</a>
-        <a href="/admin/fotos" className="text-muted hover:text-foreground">Fotos</a>
-        <a href="/admin/categorias" className="text-muted hover:text-foreground">Categorias</a>
-        <a href="/admin/sobre" className="text-muted hover:text-foreground">Sobre</a>
-      </nav>
-      {children}
-    </div>
-  );
+  return <AdminGuard>{children}</AdminGuard>;
 }
