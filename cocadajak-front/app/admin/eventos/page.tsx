@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from "react";
 import {
   Category,
   Event,
+  EventVideo,
   getAdminEvents,
   getAdminCategories,
   createEvent,
@@ -23,7 +24,8 @@ export default function AdminEventosPage() {
   const [categoryId, setCategoryId] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [existingVideos, setExistingVideos] = useState<EventVideo[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -49,57 +51,66 @@ export default function AdminEventosPage() {
     setCategoryId("");
     setEventDate("");
     setFiles([]);
-    setVideoUrls([]);
+    setExistingVideos([]);
+    setVideoFiles([]);
   }
 
-  function startEdit(event: Event) {
+function startEdit(event: Event) {
   setEditingId(event.id);
   setTitle(event.title);
   setDescription(event.description ?? "");
   setCategoryId(String(event.category_id));
   setEventDate(event.event_date ? event.event_date.slice(0, 7) : "");
+
   setFiles([]);
-  setVideoUrls(event.videos.map((video) => video.video_url));
+
+  setExistingVideos(event.videos);
+  setVideoFiles([]);
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError("");
-    setSaving(true);
+async function handleSubmit(e: FormEvent) {
+  e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("category_id", categoryId);
-    if (eventDate) formData.append("event_date", `${eventDate}-01`);
-    files.forEach((file) => formData.append("images[]", file));
+  setError("");
+  setSaving(true);
 
-    if (editingId) {
-      formData.append("videos_sync", "1");
-    }
+  const formData = new FormData();
 
-    videoUrls.forEach((url) => {
-      if (url.trim()) {
-        formData.append("videos[]", url.trim());
-      }
-    });
+  formData.append("title", title);
+  formData.append("description", description);
+  formData.append("category_id", categoryId);
 
-    try {
-      if (editingId) {
-        await updateEvent(editingId, formData);
-      } else {
-        await createEvent(formData);
-      }
-      resetForm();
-      await loadData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar o evento.");
-    } finally {
-      setSaving(false);
-    }
+  if (eventDate) {
+    formData.append("event_date", `${eventDate}-01`);
   }
+
+  files.forEach((file) => {
+    formData.append("images[]", file);
+  });
+
+  videoFiles.forEach((file) => {
+    formData.append("videos[]", file);
+  });
+
+  try {
+    if (editingId) {
+      await updateEvent(editingId, formData);
+    } else {
+      await createEvent(formData);
+    }
+
+    resetForm();
+    await loadData();
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Erro ao salvar o evento."
+    );
+  } finally {
+    setSaving(false);
+  }
+}
 
   async function handleDeleteEvent(id: number) {
     if (!confirm("Excluir esse evento e TODAS as fotos dele? Essa ação não pode ser desfeita.")) return;
@@ -187,47 +198,27 @@ export default function AdminEventosPage() {
               <span className="text-xs text-muted">{files.length} arquivo(s) selecionado(s)</span>
             )}
           </div>
-
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <label className="text-sm text-muted">
-              Vídeos do Instagram (opcional)
+              {editingId ? "Adicionar mais vídeos (opcional)" : "Vídeos (opcional)"}
             </label>
 
-            {videoUrls.map((url, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => {
-                    const updated = [...videoUrls];
-                    updated[index] = e.target.value;
-                    setVideoUrls(updated);
-                  }}
-                  placeholder="https://www.instagram.com/reel/..."
-                  className="flex-1 border-b border-border bg-transparent py-2 text-sm outline-none focus:border-accent"
-                />
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              multiple
+              onChange={(e) =>
+                setVideoFiles(Array.from(e.target.files ?? []))
+              }
+              className="text-sm text-muted"
+            />
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVideoUrls(videoUrls.filter((_, i) => i !== index));
-                  }}
-                  className="text-sm text-red-400 hover:underline"
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-
-            <button
-              type="button"
-              onClick={() => setVideoUrls([...videoUrls, ""])}
-              className="w-fit border border-border px-4 py-2 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
-            >
-              + Adicionar vídeo
-            </button>
-          </div>
-
+            {videoFiles.length > 0 && (
+              <span className="text-xs text-muted">
+                {videoFiles.length} vídeo(s) selecionado(s)
+              </span>
+            )}
+        </div>
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <div className="flex gap-3">

@@ -6,19 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        //
+        Schema::table('event_videos', function (Blueprint $table) {
+            $table->renameColumn('video_url', 'video_path');
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        //
+        Schema::table('event_videos', function (Blueprint $table) {
+            $table->renameColumn('video_path', 'video_url');
+        });
     }
 };

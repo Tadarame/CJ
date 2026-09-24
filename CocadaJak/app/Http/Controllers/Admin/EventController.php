@@ -32,7 +32,7 @@ class EventController extends Controller
             'images' => ['required', 'array', 'min:1'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'videos' => ['nullable', 'array'],
-            'videos.*' => ['url'],
+            'videos.*' => ['file', 'mimes:mp4,webm,mov', 'max:61440'],
         ]);
 
         $event = Event::create([
@@ -51,11 +51,13 @@ class EventController extends Controller
                 'sort_order' => $index,
             ]);
         }
-        if (!empty($data['videos'])) {
-            foreach ($data['videos'] as $index => $videoUrl) {
+        if ($request->hasFile('videos')) {
+            foreach ($request->file('videos') as $index => $video) {
+                $path = $video->store('events/videos', 'public');
+
                 EventVideo::create([
                     'event_id' => $event->id,
-                    'video_url' => $videoUrl,
+                    'video_path' => $path,
                     'sort_order' => $index,
                 ]);
             }
@@ -82,14 +84,13 @@ class EventController extends Controller
             'event_date' => ['nullable', 'date'],
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
-            'videos_sync' => ['nullable', 'boolean'],
             'videos' => ['nullable', 'array'],
-            'videos.*' => ['url'],
+            'videos.*' => ['file', 'mimes:mp4,webm,mov', 'max:61440'],
         ]);
 
         $event->update(
             collect($data)
-                ->except(['images', 'videos', 'videos_sync'])
+                ->except(['images', 'videos'])
                 ->toArray()
         );
 
@@ -108,17 +109,19 @@ class EventController extends Controller
             }
         }
 
-        if ($request->boolean('videos_sync')) {
-            $event->videos()->delete();
+        if ($request->hasFile('videos')) {
+        $nextVideoOrder = $event->videos()->max('sort_order') + 1;
 
-            foreach ($data['videos'] ?? [] as $index => $videoUrl) {
-                EventVideo::create([
-                    'event_id' => $event->id,
-                    'video_url' => $videoUrl,
-                    'sort_order' => $index,
-                ]);
-            }
+        foreach ($request->file('videos') as $index => $video) {
+            $path = $video->store('events/videos', 'public');
+
+            EventVideo::create([
+                'event_id' => $event->id,
+                'video_path' => $path,
+                'sort_order' => $nextVideoOrder + $index,
+            ]);
         }
+    }
 
         return response()->json([
             'event' => $event->fresh(['category', 'photos', 'videos']),
@@ -131,7 +134,13 @@ class EventController extends Controller
             $this->deletePhotoFiles($photo);
         }
 
-        $event->delete(); // cascadeOnDelete já apaga os event_photos no banco
+        foreach ($event->videos as $video) {
+            if ($video->video_path) {
+                Storage::disk('public')->delete($video->video_path);
+            }
+        }
+
+        $event->delete();
 
         return response()->json(null, 204);
     }

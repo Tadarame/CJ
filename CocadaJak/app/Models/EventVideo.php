@@ -8,7 +8,7 @@ class EventVideo extends Model
 {
     protected $fillable = [
         'event_id',
-        'video_url',
+        'video_path',
         'sort_order',
     ];
 

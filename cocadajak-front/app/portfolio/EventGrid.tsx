@@ -152,7 +152,7 @@ export default function EventGrid({
                     {selected.videos.map((video) => (
                       <InstagramVideoCard
                         key={video.id}
-                        videoUrl={video.video_url}
+                        videoUrl={`${process.env.NEXT_PUBLIC_API_URL}/storage/${video.video_path}`}
                       />
                     ))}
                   </div>

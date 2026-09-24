@@ -20,7 +20,7 @@ export interface EventPhoto {
 
 export interface EventVideo  {
   id: number;
-  video_url: string;
+  video_path: string;
   sort_order: number;
 };
 
@@ -191,26 +191,6 @@ export async function deleteEventPhoto(eventId: number, photoId: number): Promis
     method: "DELETE",
   });
 }
-
-export async function addEventVideo(
-  eventId: number,
-  videoUrl: string,
-  sortOrder?: number
-): Promise<{ video: EventVideo }> {
-  await getCsrfCookie();
-
-  return apiFetch<{ video: EventVideo }>(
-    `/api/admin/events/${eventId}/videos`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        video_url: videoUrl,
-        sort_order: sortOrder ?? 0,
-      }),
-    }
-  );
-}
-
 export async function deleteEventVideo(
   eventId: number,
   videoId: number
