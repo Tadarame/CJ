@@ -10,6 +10,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class EventController extends Controller
 {
@@ -115,22 +116,44 @@ class EventController extends Controller
     }
 
     private function storeOptimizedImage(UploadedFile $file): array
-    {
-        $manager = ImageManager::gd();
-        $filename = Str::random(40);
+{
+    $manager = new ImageManager(new Driver());
 
-        $full = $manager->read($file->getRealPath());
-        $full->scaleDown(width: 1600);
-        $fullPath = "events/{$filename}-full.webp";
-        Storage::disk('public')->put($fullPath, (string) $full->toWebp(quality: 82));
+    $filename = Str::random(40);
 
-        $thumb = $manager->read($file->getRealPath());
-        $thumb->cover(600, 750);
-        $thumbPath = "events/{$filename}-thumb.webp";
-        Storage::disk('public')->put($thumbPath, (string) $thumb->toWebp(quality: 78));
+    // Imagem principal
+    $full = $manager->decodePath($file->getRealPath());
+    $full->scaleDown(width: 1600);
 
-        return ['full' => $fullPath, 'thumb' => $thumbPath];
-    }
+    $fullPath = "events/{$filename}-full.webp";
+
+    Storage::disk('public')->put(
+        $fullPath,
+        (string) $full->encodeUsingFormat(
+            \Intervention\Image\Format::WEBP,
+            quality: 82
+        )
+    );
+
+    // Thumbnail
+    $thumb = $manager->decodePath($file->getRealPath());
+    $thumb->cover(600, 750);
+
+    $thumbPath = "events/{$filename}-thumb.webp";
+
+    Storage::disk('public')->put(
+        $thumbPath,
+        (string) $thumb->encodeUsingFormat(
+            \Intervention\Image\Format::WEBP,
+            quality: 78
+        )
+    );
+
+    return [
+        'full' => $fullPath,
+        'thumb' => $thumbPath,
+    ];
+}
 
     private function deletePhotoFiles(EventPhoto $photo): void
     {
