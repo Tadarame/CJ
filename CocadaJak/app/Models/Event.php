@@ -22,4 +22,8 @@ class Event extends Model
     {
         return $this->hasMany(EventPhoto::class)->orderBy('sort_order');
     }
+    public function videos()
+    {
+        return $this->hasMany(EventVideo::class)->orderBy('sort_order');
+    }
 }

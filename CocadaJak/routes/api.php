@@ -8,7 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Admin\EventController;
-
+use App\Http\Controllers\Admin\EventVideoController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\AboutController as AdminAboutController;
 
@@ -35,4 +35,8 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         ->name('events.photos.destroy');
     Route::apiResource('categories', AdminCategoryController::class);
     Route::post('/about', [AdminAboutController::class, 'update'])->name('about.update');
+    Route::post('events/{event}/videos', [EventVideoController::class, 'store'])
+    ->name('events.videos.store');
+    Route::delete('events/{event}/videos/{video}', [EventVideoController::class, 'destroy'])
+    ->name('events.videos.destroy');
 });

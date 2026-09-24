@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Event } from "@/lib/api";
 import { formatMonthYear } from "@/lib/formatDate";
+import InstagramVideoCard from "../components/InstagramVideoCard";
 
 export default function EventGrid({
   events,
@@ -118,18 +119,46 @@ export default function EventGrid({
                 </>
               )}
             </div>
-
             <div className="flex flex-col gap-3 py-2">
-              <h2 className="font-display text-2xl italic">{selected.title}</h2>
+              <h2 className="font-display text-2xl italic">
+                {selected.title}
+              </h2>
+
               {selected.category && (
-                <span className="text-sm text-muted">{selected.category.name}</span>
+                <span className="text-sm text-muted">
+                  {selected.category.name}
+                </span>
               )}
+
               {selected.event_date && (
-                <span className="text-sm text-accent">{formatMonthYear(selected.event_date)}</span>
+                <span className="text-sm text-accent">
+                  {formatMonthYear(selected.event_date)}
+                </span>
               )}
+
               {selected.description && (
-                <p className="break-words text-sm text-muted">{selected.description}</p>
+                <p className="break-words text-sm text-muted">
+                  {selected.description}
+                </p>
               )}
+
+              {selected.videos.length > 0 && (
+                <div className="mt-6 flex flex-col gap-4">
+                  <h3 className="text-sm text-accent">
+                    Vídeos
+                  </h3>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {selected.videos.map((video) => (
+                      <InstagramVideoCard
+                        key={video.id}
+                        videoUrl={video.video_url}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={closeModal}
                 className="mt-4 w-fit border border-border px-4 py-2 text-sm transition-colors hover:border-accent hover:text-accent"

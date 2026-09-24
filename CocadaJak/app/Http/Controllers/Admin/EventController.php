@@ -11,12 +11,13 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use App\Models\EventVideo;
 
 class EventController extends Controller
 {
     public function index()
     {
-        $events = Event::with(['category', 'photos'])->latest()->get();
+        $events = Event::with(['category', 'photos', 'videos'])->latest()->get();
 
         return response()->json(['events' => $events]);
     }
@@ -30,6 +31,8 @@ class EventController extends Controller
             'event_date' => ['nullable', 'date'],
             'images' => ['required', 'array', 'min:1'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'videos' => ['nullable', 'array'],
+            'videos.*' => ['url'],
         ]);
 
         $event = Event::create([
@@ -48,16 +51,25 @@ class EventController extends Controller
                 'sort_order' => $index,
             ]);
         }
+        if (!empty($data['videos'])) {
+            foreach ($data['videos'] as $index => $videoUrl) {
+                EventVideo::create([
+                    'event_id' => $event->id,
+                    'video_url' => $videoUrl,
+                    'sort_order' => $index,
+                ]);
+            }
+        }
 
         return response()->json([
-            'event' => $event->load(['category', 'photos']),
+            'event' => $event->load(['category', 'photos', 'videos']),
         ], 201);
     }
 
     public function show(Event $event)
     {
         return response()->json([
-            'event' => $event->load(['category', 'photos']),
+            'event' => $event->load(['category', 'photos', 'videos']),
         ]);
     }
 
@@ -70,14 +82,23 @@ class EventController extends Controller
             'event_date' => ['nullable', 'date'],
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'videos_sync' => ['nullable', 'boolean'],
+            'videos' => ['nullable', 'array'],
+            'videos.*' => ['url'],
         ]);
 
-        $event->update(collect($data)->except('images')->toArray());
+        $event->update(
+            collect($data)
+                ->except(['images', 'videos', 'videos_sync'])
+                ->toArray()
+        );
 
         if ($request->hasFile('images')) {
             $nextOrder = $event->photos()->max('sort_order') + 1;
+
             foreach ($request->file('images') as $index => $image) {
                 $paths = $this->storeOptimizedImage($image);
+
                 EventPhoto::create([
                     'event_id' => $event->id,
                     'image_path' => $paths['full'],
@@ -87,8 +108,20 @@ class EventController extends Controller
             }
         }
 
+        if ($request->boolean('videos_sync')) {
+            $event->videos()->delete();
+
+            foreach ($data['videos'] ?? [] as $index => $videoUrl) {
+                EventVideo::create([
+                    'event_id' => $event->id,
+                    'video_url' => $videoUrl,
+                    'sort_order' => $index,
+                ]);
+            }
+        }
+
         return response()->json([
-            'event' => $event->fresh(['category', 'photos']),
+            'event' => $event->fresh(['category', 'photos', 'videos']),
         ]);
     }
 
