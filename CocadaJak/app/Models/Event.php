@@ -11,6 +11,7 @@ class Event extends Model
         'description',
         'event_date',
         'category_id',
+        'guide_image_path',
     ];
 
     public function category()

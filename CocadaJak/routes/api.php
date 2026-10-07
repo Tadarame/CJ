@@ -44,4 +44,6 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     ->name('events.videos.store');
     Route::delete('events/{event}/videos/{video}', [EventVideoController::class, 'destroy'])
     ->name('events.videos.destroy');
+    Route::delete('events/{event}/guide-image', [EventController::class, 'destroyGuideImage'])
+    ->name('events.guide-image.destroy');
 });

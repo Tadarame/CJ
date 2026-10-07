@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+
 import { Event } from "@/lib/api";
 import { formatMonthYear } from "@/lib/formatDate";
+
 import InstagramVideoCard from "../components/InstagramVideoCard";
 
 export default function EventGrid({
@@ -13,8 +15,9 @@ export default function EventGrid({
   highlightId?: number;
 }) {
   const [selected, setSelected] = useState<Event | null>(
-    () => events.find((e) => e.id === highlightId) ?? null
+    () => events.find((e) => e.id === highlightId) ?? null,
   );
+
   const [photoIndex, setPhotoIndex] = useState(0);
 
   function openEvent(event: Event) {
@@ -29,12 +32,16 @@ export default function EventGrid({
 
   function nextPhoto() {
     if (!selected) return;
+
     setPhotoIndex((i) => (i + 1) % selected.photos.length);
   }
 
   function prevPhoto() {
     if (!selected) return;
-    setPhotoIndex((i) => (i - 1 + selected.photos.length) % selected.photos.length);
+
+    setPhotoIndex(
+      (i) => (i - 1 + selected.photos.length) % selected.photos.length,
+    );
   }
 
   const currentPhoto = selected?.photos[photoIndex];
@@ -44,36 +51,57 @@ export default function EventGrid({
       <div className="mt-10 flex flex-col divide-y divide-border">
         {events.map((event) => {
           const cover = event.photos[0];
+
+          const coverSrc = event.guide_image_path
+            ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${event.guide_image_path}`
+            : cover
+              ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${
+                  cover.thumbnail_path ?? cover.image_path
+                }`
+              : null;
+
           return (
             <button
               key={event.id}
               onClick={() => openEvent(event)}
               className="flex flex-col gap-6 py-10 text-left first:pt-0 sm:flex-row sm:items-center sm:gap-12"
             >
-              {cover && (
-                <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${cover.thumbnail_path ?? cover.image_path}`}
-                  alt={event.title}
-                  loading="lazy"
-                  className="aspect-[4/5] w-full object-cover transition-opacity hover:opacity-90 sm:w-2/5"
-                />
-              )}
+            {coverSrc && (
+              <img
+                src={coverSrc}
+                alt={event.title}
+                loading="lazy"
+                className="aspect-[4/5] w-full object-cover transition-opacity hover:opacity-90 sm:w-2/5"
+              />
+            )}
 
               <div className="flex flex-1 flex-col gap-3">
                 {event.category && (
-                  <span className="text-sm text-accent">{event.category.name}</span>
+                  <span className="text-sm text-accent">
+                    {event.category.name}
+                  </span>
                 )}
-                <h2 className="font-display text-2xl italic sm:text-3xl">{event.title}</h2>
+
+                <h2 className="font-display text-2xl italic sm:text-3xl">
+                  {event.title}
+                </h2>
+
                 {event.event_date && (
-                  <span className="text-sm text-muted">{formatMonthYear(event.event_date)}</span>
+                  <span className="text-sm text-muted">
+                    {formatMonthYear(event.event_date)}
+                  </span>
                 )}
+
                 {event.description && (
                   <p className="line-clamp-3 max-w-md break-words text-sm text-muted">
                     {event.description}
                   </p>
                 )}
+
                 {event.photos.length > 1 && (
-                  <span className="text-xs text-muted">{event.photos.length} fotos</span>
+                  <span className="text-xs text-muted">
+                    {event.photos.length} fotos
+                  </span>
                 )}
               </div>
             </button>
@@ -88,8 +116,9 @@ export default function EventGrid({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="grid max-h-full max-w-6x1 gap-6 overflow-y-auto sm:grid-cols-2"
+            className="grid max-h-full w-full max-w-6xl gap-6 overflow-y-auto sm:grid-cols-2"
           >
+            {/* Galeria */}
             <div className="relative">
               <img
                 src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${currentPhoto.image_path}`}
@@ -106,6 +135,7 @@ export default function EventGrid({
                   >
                     ‹
                   </button>
+
                   <button
                     onClick={nextPhoto}
                     aria-label="Próxima foto"
@@ -113,12 +143,15 @@ export default function EventGrid({
                   >
                     ›
                   </button>
+
                   <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/70 px-2 py-1 text-xs text-muted">
                     {photoIndex + 1} / {selected.photos.length}
                   </span>
                 </>
               )}
             </div>
+
+            {/* Informações */}
             <div className="flex flex-col gap-3 py-2">
               <h2 className="font-display text-2xl italic">
                 {selected.title}
@@ -142,13 +175,23 @@ export default function EventGrid({
                 </p>
               )}
 
+              {/* Imagem de guia */}
+              {selected.guide_image_path && (
+                <div className="mt-4 overflow-hidden border border-border bg-black">
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${selected.guide_image_path}`}
+                    alt={`Imagem de guia de ${selected.title}`}
+                    className="max-h-[60vh] w-full object-contain"
+                  />
+                </div>
+              )}
+
+              {/* Vídeos */}
               {selected.videos.length > 0 && (
                 <div className="mt-6 flex flex-col gap-4">
-                  <h3 className="text-sm text-accent">
-                    Vídeos
-                  </h3>
+                  <h3 className="text-sm text-accent">Vídeos</h3>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-1">
                     {selected.videos.map((video) => (
                       <InstagramVideoCard
                         key={video.id}

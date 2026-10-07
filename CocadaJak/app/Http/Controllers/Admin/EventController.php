@@ -29,17 +29,25 @@ class EventController extends Controller
             'description' => ['nullable', 'string'],
             'category_id' => ['required', 'exists:categories,id'],
             'event_date' => ['nullable', 'date'],
+            'guide_image' => ['nullable', 'image', 'mimes: jpg,jpeg,png,webp' , 'max:10240'],
             'images' => ['required', 'array', 'min:1'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'videos' => ['nullable', 'array'],
             'videos.*' => ['file', 'mimes:mp4,webm,mov', 'max:61440'],
         ]);
 
+        $guideImagePath = null;
+
+        if ($request->hasFile('guide_image')) {
+            $guideImagePath = $request->file('guide_image')->store('events/guides', 'public');
+        }
+
         $event = Event::create([
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'category_id' => $data['category_id'],
             'event_date' => $data['event_date'] ?? null,
+            'guide_image_path' => $guideImagePath,
         ]);
 
         foreach ($request->file('images') as $index => $image) {
@@ -86,13 +94,27 @@ class EventController extends Controller
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'videos' => ['nullable', 'array'],
             'videos.*' => ['file', 'mimes:mp4,webm,mov', 'max:61440'],
+            'guide_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
         ]);
 
         $event->update(
             collect($data)
-                ->except(['images', 'videos'])
+                ->except(['images', 'videos', 'guide_image'])
                 ->toArray()
         );
+        if ($request->hasFile('guide_image')) {
+            $oldGuideImage = $event->guide_image_path;
+
+            $newGuideImage = $request->file('guide_image')->store('events/guides', 'public');
+
+            $event->update([
+                'guide_image_path' => $newGuideImage,
+            ]);
+
+            if ($oldGuideImage) {
+                Storage::disk('public')->delete($oldGuideImage);
+            }
+        }
 
         if ($request->hasFile('images')) {
             $nextOrder = $event->photos()->max('sort_order') + 1;
@@ -140,10 +162,29 @@ class EventController extends Controller
             }
         }
 
+        if ($event->guide_image_path) {
+            Storage::disk('public')->delete($event->guide_image_path);
+        }
+
         $event->delete();
 
         return response()->json(null, 204);
     }
+
+    public function destroyGuideImage(Event $event)
+{
+    if ($event->guide_image_path) {
+        Storage::disk('public')->delete($event->guide_image_path);
+    }
+
+    $event->update([
+        'guide_image_path' => null,
+    ]);
+
+    return response()->json([
+        'event' => $event->fresh(['category', 'photos', 'videos']),
+    ]);
+}
 
     public function destroyPhoto(Event $event, EventPhoto $photo)
     {

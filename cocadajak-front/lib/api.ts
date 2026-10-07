@@ -30,6 +30,7 @@ export interface Event {
   description: string | null;
   event_date: string | null;
   category_id: number;
+  guide_image_path: string | null;
   category?: Category;
   photos: EventPhoto[];
   videos: EventVideo[];
@@ -197,6 +198,16 @@ export async function deleteEventVideo(
 ): Promise<null> {
   return apiFetch<null>(
     `/api/admin/events/${eventId}/videos/${videoId}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
+export async function deleteEventGuideImage(
+  eventId: number
+): Promise<{ event: Event }> {
+  return apiFetch<{ event: Event }>(
+    `/api/admin/events/${eventId}/guide-image`,
     {
       method: "DELETE",
     }
