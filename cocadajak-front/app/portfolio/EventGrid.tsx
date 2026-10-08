@@ -6,6 +6,7 @@ import { Event } from "@/lib/api";
 import { formatMonthYear } from "@/lib/formatDate";
 
 import InstagramVideoCard from "../components/InstagramVideoCard";
+import EventCard from "./components/EventCard";
 
 export default function EventGrid({
   events,
@@ -19,6 +20,8 @@ export default function EventGrid({
   );
 
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [photoVisible, setPhotoVisible] = useState(true);
 
   const galleryImages = selected
     ? [
@@ -37,23 +40,44 @@ export default function EventGrid({
   function openEvent(event: Event) {
     setSelected(event);
     setPhotoIndex(0);
+    setModalVisible(false);
+
+    requestAnimationFrame(() => {
+      setModalVisible(true);
+    });
   }
 
   function closeModal() {
-    setSelected(null);
-    setPhotoIndex(0);
+    setModalVisible(false);
+
+    setTimeout(() => {
+      setSelected(null);
+      setPhotoIndex(0);
+    }, 500);
   }
 
   function nextPhoto() {
     if (galleryImages.length === 0) return;
 
-    setPhotoIndex((i) => (i + 1) % galleryImages.length);
+    setPhotoVisible(false);
+
+    setTimeout(() => {
+      setPhotoIndex((i) => (i + 1) % galleryImages.length);
+      setPhotoVisible(true);
+    }, 200);
   }
 
   function prevPhoto() {
     if (galleryImages.length === 0) return;
 
-    setPhotoIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
+    setPhotoVisible(false);
+
+    setTimeout(() => {
+      setPhotoIndex(
+        (i) => (i - 1 + galleryImages.length) % galleryImages.length,
+      );
+      setPhotoVisible(true);
+    }, 200);
   }
 
   const currentPhoto = galleryImages[photoIndex];
@@ -61,64 +85,13 @@ export default function EventGrid({
   return (
     <>
       <div className="mt-10 flex flex-col divide-y divide-border">
-        {events.map((event) => {
-          const cover = event.photos[0];
-
-          const coverSrc = event.guide_image_path
-            ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${event.guide_image_path}`
-            : cover
-              ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${
-                  cover.thumbnail_path ?? cover.image_path
-                }`
-              : null;
-
-          return (
-            <button
-              key={event.id}
-              onClick={() => openEvent(event)}
-              className="flex flex-col gap-6 py-10 text-left first:pt-0 sm:flex-row sm:items-center sm:gap-12"
-            >
-              {coverSrc && (
-                <img
-                  src={coverSrc}
-                  alt={event.title}
-                  loading="lazy"
-                  className="aspect-[4/5] w-full object-cover transition-opacity hover:opacity-90 sm:w-2/5"
-                />
-              )}
-
-              <div className="flex flex-1 flex-col gap-3">
-                {event.category && (
-                  <span className="text-sm text-accent">
-                    {event.category.name}
-                  </span>
-                )}
-
-                <h2 className="font-display text-2xl italic sm:text-3xl">
-                  {event.title}
-                </h2>
-
-                {event.event_date && (
-                  <span className="text-sm text-muted">
-                    {formatMonthYear(event.event_date)}
-                  </span>
-                )}
-
-                {event.description && (
-                  <p className="line-clamp-3 max-w-md break-words text-sm text-muted">
-                    {event.description}
-                  </p>
-                )}
-
-                {event.photos.length > 1 && (
-                  <span className="text-xs text-muted">
-                    {event.photos.length} fotos
-                  </span>
-                )}
-              </div>
-            </button>
-          );
-        })}
+        {events.map((event) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            onClick={() => openEvent(event)}
+          />
+        ))}
       </div>
 
       {selected && currentPhoto && (
@@ -128,14 +101,20 @@ export default function EventGrid({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="grid max-h-full w-full max-w-6xl gap-6 overflow-y-auto sm:grid-cols-2"
+            className={`grid max-h-full w-full max-w-6xl gap-6 overflow-y-auto transition-all duration-500 sm:grid-cols-2 ${
+              modalVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-4 opacity-0"
+            }`}
           >
             {/* Galeria */}
             <div className="relative">
               <img
                 src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${currentPhoto.image_path}`}
                 alt={selected.title}
-                className="max-h-[80vh] w-full object-contain"
+                className={`max-h-[80vh] w-full object-contain transition-opacity duration-200 ${
+                  photoVisible ? "opacity-100" : "opacity-0"
+                }`}
               />
 
               {galleryImages.length > 1 && (
