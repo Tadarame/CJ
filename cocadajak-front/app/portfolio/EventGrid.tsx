@@ -20,6 +20,20 @@ export default function EventGrid({
 
   const [photoIndex, setPhotoIndex] = useState(0);
 
+  const galleryImages = selected
+    ? [
+        ...(selected.guide_image_path
+          ? [
+              {
+                image_path: selected.guide_image_path,
+                thumbnail_path: null,
+              },
+            ]
+          : []),
+        ...selected.photos,
+      ]
+    : [];
+
   function openEvent(event: Event) {
     setSelected(event);
     setPhotoIndex(0);
@@ -31,20 +45,18 @@ export default function EventGrid({
   }
 
   function nextPhoto() {
-    if (!selected) return;
+    if (galleryImages.length === 0) return;
 
-    setPhotoIndex((i) => (i + 1) % selected.photos.length);
+    setPhotoIndex((i) => (i + 1) % galleryImages.length);
   }
 
   function prevPhoto() {
-    if (!selected) return;
+    if (galleryImages.length === 0) return;
 
-    setPhotoIndex(
-      (i) => (i - 1 + selected.photos.length) % selected.photos.length,
-    );
+    setPhotoIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
   }
 
-  const currentPhoto = selected?.photos[photoIndex];
+  const currentPhoto = galleryImages[photoIndex];
 
   return (
     <>
@@ -66,14 +78,14 @@ export default function EventGrid({
               onClick={() => openEvent(event)}
               className="flex flex-col gap-6 py-10 text-left first:pt-0 sm:flex-row sm:items-center sm:gap-12"
             >
-            {coverSrc && (
-              <img
-                src={coverSrc}
-                alt={event.title}
-                loading="lazy"
-                className="aspect-[4/5] w-full object-cover transition-opacity hover:opacity-90 sm:w-2/5"
-              />
-            )}
+              {coverSrc && (
+                <img
+                  src={coverSrc}
+                  alt={event.title}
+                  loading="lazy"
+                  className="aspect-[4/5] w-full object-cover transition-opacity hover:opacity-90 sm:w-2/5"
+                />
+              )}
 
               <div className="flex flex-1 flex-col gap-3">
                 {event.category && (
@@ -126,7 +138,7 @@ export default function EventGrid({
                 className="max-h-[80vh] w-full object-contain"
               />
 
-              {selected.photos.length > 1 && (
+              {galleryImages.length > 1 && (
                 <>
                   <button
                     onClick={prevPhoto}
@@ -145,7 +157,7 @@ export default function EventGrid({
                   </button>
 
                   <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/70 px-2 py-1 text-xs text-muted">
-                    {photoIndex + 1} / {selected.photos.length}
+                    {photoIndex + 1} / {galleryImages.length}
                   </span>
                 </>
               )}
@@ -153,9 +165,7 @@ export default function EventGrid({
 
             {/* Informações */}
             <div className="flex flex-col gap-3 py-2">
-              <h2 className="font-display text-2xl italic">
-                {selected.title}
-              </h2>
+              <h2 className="font-display text-2xl italic">{selected.title}</h2>
 
               {selected.category && (
                 <span className="text-sm text-muted">
@@ -173,17 +183,6 @@ export default function EventGrid({
                 <p className="break-words text-sm text-muted">
                   {selected.description}
                 </p>
-              )}
-
-              {/* Imagem de guia */}
-              {selected.guide_image_path && (
-                <div className="mt-4 overflow-hidden border border-border bg-black">
-                  <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${selected.guide_image_path}`}
-                    alt={`Imagem de guia de ${selected.title}`}
-                    className="max-h-[60vh] w-full object-contain"
-                  />
-                </div>
               )}
 
               {/* Vídeos */}
