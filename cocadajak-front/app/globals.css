@@ -32,3 +32,21 @@ body {
 a {
   text-underline-offset: 3px;
 }
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fade-up 700ms ease-out both;
+}
+.fade-up-delay {
+  animation: fade-up 700ms ease-out 150ms both;
+}

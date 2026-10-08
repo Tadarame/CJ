@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import { Event } from "@/lib/api";
 import { formatMonthYear } from "@/lib/formatDate";
 
@@ -20,7 +19,7 @@ export default function EventGrid({
   );
 
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(highlightId !== undefined);
   const [photoVisible, setPhotoVisible] = useState(true);
 
   const galleryImages = selected
@@ -36,6 +35,8 @@ export default function EventGrid({
         ...selected.photos,
       ]
     : [];
+
+  const currentPhoto = galleryImages[photoIndex];
 
   function openEvent(event: Event) {
     setSelected(event);
@@ -55,6 +56,36 @@ export default function EventGrid({
       setPhotoIndex(0);
     }, 500);
   }
+
+  useEffect(() => {
+    if (!selected) return;
+
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closeModal();
+      }
+
+      if (event.key === "ArrowRight") {
+        nextPhoto();
+      }
+
+      if (event.key === "ArrowLeft") {
+        prevPhoto();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+
+      document.body.style.overflow = "";
+
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selected]);
+
 
   function nextPhoto() {
     if (galleryImages.length === 0) return;
@@ -79,8 +110,6 @@ export default function EventGrid({
       setPhotoVisible(true);
     }, 200);
   }
-
-  const currentPhoto = galleryImages[photoIndex];
 
   return (
     <>
@@ -122,7 +151,7 @@ export default function EventGrid({
                   <button
                     onClick={prevPhoto}
                     aria-label="Foto anterior"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 border border-border/60 bg-background/70 px-3 py-2 text-lg transition-colors hover:border-accent hover:text-accent"
+                    className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-border/60 bg-background/70 text-xl text-foreground backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:border-accent hover:bg-background hover:text-accent"
                   >
                     ‹
                   </button>
@@ -130,7 +159,7 @@ export default function EventGrid({
                   <button
                     onClick={nextPhoto}
                     aria-label="Próxima foto"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 border border-border/60 bg-background/70 px-3 py-2 text-lg transition-colors hover:border-accent hover:text-accent"
+                    className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-border/60 bg-background/70 text-xl text-foreground backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:border-accent hover:bg-background hover:text-accent"
                   >
                     ›
                   </button>

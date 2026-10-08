@@ -12,18 +12,23 @@ export default async function Home() {
   }
 
   const featured = latestEvents[0];
-  const featuredCover = featured?.photos[0];
+  const featuredCover = featured?.guide_image_path
+  ? {
+      image_path: featured.guide_image_path,
+      thumbnail_path: null,
+    }
+  : featured?.photos[0];
 
   return (
     <div className="grid gap-16 py-16 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-12">
-      <section className="max-w-2xl">
+      <section className="fade-up max-w-2xl">
         <span className="text-sm text-accent">Fotografia</span>
         <h1 className="mt-3 font-display text-5xl italic leading-[1.05] sm:text-7xl">
           Imagens que ficam.
         </h1>
         <p className="mt-6 max-w-md text-base text-muted sm:text-lg">
-          Retratos, eventos e paisagens registrados por CocadaJak. Cada
-          trabalho é uma tentativa de guardar um instante direito.
+          Retratos, eventos e paisagens registrados por CocadaJak. Cada trabalho
+          é uma tentativa de guardar um instante direito.
         </p>
         <div className="mt-8 flex gap-6 text-sm">
           <Link
@@ -42,7 +47,10 @@ export default async function Home() {
       </section>
 
       {featured && featuredCover && (
-        <Link href={`/portfolio?highlight=${featured.id}`} className="group block">
+        <Link
+          href={`/portfolio?highlight=${featured.id}`}
+          className="fade-up-delay group block"
+        >
           <figure className="overflow-hidden">
             <img
               src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${featuredCover.thumbnail_path ?? featuredCover.image_path}`}
