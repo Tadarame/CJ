@@ -50,3 +50,12 @@ a {
 .fade-up-delay {
   animation: fade-up 700ms ease-out 150ms both;
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

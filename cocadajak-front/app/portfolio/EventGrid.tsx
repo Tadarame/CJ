@@ -20,9 +20,7 @@ export default function EventGrid({
   );
 
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [modalVisible, setModalVisible] = useState(
-    highlightId !== undefined,
-  );
+  const [modalVisible, setModalVisible] = useState(highlightId !== undefined);
   const [photoVisible, setPhotoVisible] = useState(true);
 
   const galleryImages = selected
@@ -130,16 +128,28 @@ export default function EventGrid({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`max-h-full w-full max-w-6xl overflow-y-auto transition-all duration-500 ${
+            className={`relative max-h-[90vh] w-full max-w-6xl overflow-y-auto scrollbar-hide pt-10 transition-all duration-500 ${
               modalVisible
                 ? "translate-y-0 opacity-100"
                 : "translate-y-4 opacity-0"
             }`}
           >
+            <button
+              type="button"
+              onClick={closeModal}
+              aria-label="Fechar modal"
+              className="absolute right-0 top-0 z-20 flex h-9 w-9 items-center justify-center border border-border bg-background text-xl text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              ×
+            </button>
+
             {/* Foto + informações */}
             <div className="grid gap-6 sm:grid-cols-2">
               {/* Galeria */}
               <div className="relative">
+                <h3 className="mb-4 text-center font-display text-xl italic">
+                  Fotos
+                </h3>
                 <img
                   src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${currentPhoto.image_path}`}
                   alt={selected.title}
@@ -196,26 +206,27 @@ export default function EventGrid({
                     {selected.description}
                   </p>
                 )}
-
-                <button
-                  onClick={closeModal}
-                  className="mt-4 w-fit border border-border px-4 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
-                >
-                  Fechar
-                </button>
               </div>
             </div>
 
             {/* Vídeos */}
             {selected.videos.length > 0 && (
               <div className="mt-8 border-t border-border pt-6">
-                <h3 className="mb-4 text-sm text-accent">Vídeos</h3>
+                <h3 className="mb-6 text-center font-display text-2xl italic text-accent">
+                  Vídeos
+                </h3>
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div
+                  className={
+                    selected.videos.length === 1
+                      ? "mx-auto w-full max-w-4xl"
+                      : "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  }
+                >
                   {selected.videos.map((video) => (
                     <div
                       key={video.id}
-                      className="aspect-video overflow-hidden border border-border bg-black"
+                      className="aspect-video w-full overflow-hidden border border-border bg-black"
                     >
                       <InstagramVideoCard
                         videoUrl={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.video_path}`}
