@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { Event } from "@/lib/api";
 import { formatMonthYear } from "@/lib/formatDate";
 
@@ -19,7 +20,9 @@ export default function EventGrid({
   );
 
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [modalVisible, setModalVisible] = useState(highlightId !== undefined);
+  const [modalVisible, setModalVisible] = useState(
+    highlightId !== undefined,
+  );
   const [photoVisible, setPhotoVisible] = useState(true);
 
   const galleryImages = selected
@@ -79,13 +82,10 @@ export default function EventGrid({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-
       document.body.style.overflow = "";
-
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selected]);
-
 
   function nextPhoto() {
     if (galleryImages.length === 0) return;
@@ -130,92 +130,101 @@ export default function EventGrid({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`grid max-h-full w-full max-w-6xl gap-6 overflow-y-auto transition-all duration-500 sm:grid-cols-2 ${
+            className={`max-h-full w-full max-w-6xl overflow-y-auto transition-all duration-500 ${
               modalVisible
                 ? "translate-y-0 opacity-100"
                 : "translate-y-4 opacity-0"
             }`}
           >
-            {/* Galeria */}
-            <div className="relative">
-              <img
-                src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${currentPhoto.image_path}`}
-                alt={selected.title}
-                className={`max-h-[80vh] w-full object-contain transition-opacity duration-200 ${
-                  photoVisible ? "opacity-100" : "opacity-0"
-                }`}
-              />
+            {/* Foto + informações */}
+            <div className="grid gap-6 sm:grid-cols-2">
+              {/* Galeria */}
+              <div className="relative">
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${currentPhoto.image_path}`}
+                  alt={selected.title}
+                  className={`max-h-[80vh] w-full object-contain transition-opacity duration-200 ${
+                    photoVisible ? "opacity-100" : "opacity-0"
+                  }`}
+                />
 
-              {galleryImages.length > 1 && (
-                <>
-                  <button
-                    onClick={prevPhoto}
-                    aria-label="Foto anterior"
-                    className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-border/60 bg-background/70 text-xl text-foreground backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:border-accent hover:bg-background hover:text-accent"
-                  >
-                    ‹
-                  </button>
+                {galleryImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevPhoto}
+                      aria-label="Foto anterior"
+                      className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-border/60 bg-background/70 text-xl text-foreground backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:border-accent hover:bg-background hover:text-accent"
+                    >
+                      ‹
+                    </button>
 
-                  <button
-                    onClick={nextPhoto}
-                    aria-label="Próxima foto"
-                    className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-border/60 bg-background/70 text-xl text-foreground backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:border-accent hover:bg-background hover:text-accent"
-                  >
-                    ›
-                  </button>
+                    <button
+                      onClick={nextPhoto}
+                      aria-label="Próxima foto"
+                      className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-border/60 bg-background/70 text-xl text-foreground backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:border-accent hover:bg-background hover:text-accent"
+                    >
+                      ›
+                    </button>
 
-                  <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/70 px-2 py-1 text-xs text-muted">
-                    {photoIndex + 1} / {galleryImages.length}
+                    <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/70 px-2 py-1 text-xs text-muted">
+                      {photoIndex + 1} / {galleryImages.length}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Informações */}
+              <div className="flex flex-col gap-3 py-2">
+                <h2 className="font-display text-2xl italic">
+                  {selected.title}
+                </h2>
+
+                {selected.category && (
+                  <span className="text-sm text-muted">
+                    {selected.category.name}
                   </span>
-                </>
-              )}
+                )}
+
+                {selected.event_date && (
+                  <span className="text-sm text-accent">
+                    {formatMonthYear(selected.event_date)}
+                  </span>
+                )}
+
+                {selected.description && (
+                  <p className="break-words text-sm text-muted">
+                    {selected.description}
+                  </p>
+                )}
+
+                <button
+                  onClick={closeModal}
+                  className="mt-4 w-fit border border-border px-4 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
+                >
+                  Fechar
+                </button>
+              </div>
             </div>
 
-            {/* Informações */}
-            <div className="flex flex-col gap-3 py-2">
-              <h2 className="font-display text-2xl italic">{selected.title}</h2>
+            {/* Vídeos */}
+            {selected.videos.length > 0 && (
+              <div className="mt-8 border-t border-border pt-6">
+                <h3 className="mb-4 text-sm text-accent">Vídeos</h3>
 
-              {selected.category && (
-                <span className="text-sm text-muted">
-                  {selected.category.name}
-                </span>
-              )}
-
-              {selected.event_date && (
-                <span className="text-sm text-accent">
-                  {formatMonthYear(selected.event_date)}
-                </span>
-              )}
-
-              {selected.description && (
-                <p className="break-words text-sm text-muted">
-                  {selected.description}
-                </p>
-              )}
-
-              {/* Vídeos */}
-              {selected.videos.length > 0 && (
-                <div className="mt-6 flex flex-col gap-4">
-                  <h3 className="text-sm text-accent">Vídeos</h3>
-
-                  <div className="grid gap-4 sm:grid-cols-1">
-                    {selected.videos.map((video) => (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {selected.videos.map((video) => (
+                    <div
+                      key={video.id}
+                      className="aspect-video overflow-hidden border border-border bg-black"
+                    >
                       <InstagramVideoCard
-                        key={video.id}
                         videoUrl={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.video_path}`}
                       />
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-
-              <button
-                onClick={closeModal}
-                className="mt-4 w-fit border border-border px-4 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
-              >
-                Fechar
-              </button>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}

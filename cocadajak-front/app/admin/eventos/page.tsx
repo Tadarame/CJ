@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
+
 import {
   Category,
   Event,
@@ -20,29 +21,39 @@ export default function AdminEventosPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
+
   const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [eventDate, setEventDate] = useState("");
+
   const [files, setFiles] = useState<File[]>([]);
+
   const [guideImageFile, setGuideImageFile] = useState<File | null>(null);
   const [existingGuideImage, setExistingGuideImage] = useState<string | null>(
     null,
   );
+
   const [existingVideos, setExistingVideos] = useState<EventVideo[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   async function loadData() {
     setLoading(true);
+
     const [eventsRes, categoriesRes] = await Promise.all([
       getAdminEvents(),
       getAdminCategories(),
     ]);
+
     setEvents(eventsRes.events);
     setCategories(categoriesRes.categories);
+
     setLoading(false);
   }
 
@@ -51,37 +62,66 @@ export default function AdminEventosPage() {
   }, []);
 
   function resetForm() {
+    filePreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    videoPreviews.forEach((preview) => URL.revokeObjectURL(preview));
+
     setEditingId(null);
     setTitle("");
     setDescription("");
     setCategoryId("");
     setEventDate("");
+
     setFiles([]);
+    setFilePreviews([]);
+
     setGuideImageFile(null);
+
     setExistingGuideImage(null);
     setExistingVideos([]);
+
     setVideoFiles([]);
+    setVideoPreviews([]);
+
+    setError("");
   }
 
   function startEdit(event: Event) {
+    filePreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    videoPreviews.forEach((preview) => URL.revokeObjectURL(preview));
+
     setEditingId(event.id);
     setTitle(event.title);
     setDescription(event.description ?? "");
     setCategoryId(String(event.category_id));
     setEventDate(event.event_date ? event.event_date.slice(0, 7) : "");
+
     setFiles([]);
+    setFilePreviews([]);
+
     setGuideImageFile(null);
     setExistingGuideImage(event.guide_image_path);
-    setExistingVideos(event.videos);
-    setVideoFiles([]);
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setExistingVideos(event.videos);
+
+    setVideoFiles([]);
+    setVideoPreviews([]);
+
+    setError("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function validateVideoFiles(files: File[]) {
     const maxSize = 60 * 1024 * 1024;
 
-    const allowedTypes = ["video/mp4", "video/webm", "video/quicktime"];
+    const allowedTypes = [
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+    ];
 
     for (const file of files) {
       if (!allowedTypes.includes(file.type)) {
@@ -142,7 +182,11 @@ export default function AdminEventosPage() {
       resetForm();
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar o evento.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erro ao salvar o evento.",
+      );
     } finally {
       setSaving(false);
     }
@@ -153,14 +197,20 @@ export default function AdminEventosPage() {
       !confirm(
         "Excluir esse evento e TODAS as fotos dele? Essa ação não pode ser desfeita.",
       )
-    )
+    ) {
       return;
+    }
+
     await deleteEvent(id);
     await loadData();
   }
 
-  async function handleDeletePhoto(eventId: number, photoId: number) {
+  async function handleDeletePhoto(
+    eventId: number,
+    photoId: number,
+  ) {
     if (!confirm("Excluir essa foto do evento?")) return;
+
     await deleteEventPhoto(eventId, photoId);
     await loadData();
   }
@@ -204,7 +254,11 @@ export default function AdminEventosPage() {
 
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao excluir o vídeo.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erro ao excluir o vídeo.",
+      );
     }
   }
 
@@ -219,8 +273,12 @@ export default function AdminEventosPage() {
           onSubmit={handleSubmit}
           className="mt-8 flex max-w-lg flex-col gap-5"
         >
+          {/* Título */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-muted">Título</label>
+            <label className="text-sm text-muted">
+              Título
+            </label>
+
             <input
               type="text"
               required
@@ -230,8 +288,12 @@ export default function AdminEventosPage() {
             />
           </div>
 
+          {/* Descrição */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-muted">Descrição (opcional)</label>
+            <label className="text-sm text-muted">
+              Descrição (opcional)
+            </label>
+
             <textarea
               rows={3}
               value={description}
@@ -240,8 +302,12 @@ export default function AdminEventosPage() {
             />
           </div>
 
+          {/* Categoria */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-muted">Categoria</label>
+            <label className="text-sm text-muted">
+              Categoria
+            </label>
+
             <select
               required
               value={categoryId}
@@ -251,18 +317,25 @@ export default function AdminEventosPage() {
               <option value="" disabled>
                 Selecione
               </option>
+
               {categories.map((c) => (
-                <option key={c.id} value={c.id} className="bg-background">
+                <option
+                  key={c.id}
+                  value={c.id}
+                  className="bg-background"
+                >
                   {c.name}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Data */}
           <div className="flex flex-col gap-2">
             <label className="text-sm text-muted">
               Mês/ano do evento (opcional)
             </label>
+
             <input
               type="month"
               value={eventDate}
@@ -271,107 +344,321 @@ export default function AdminEventosPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
+          {/* FOTOS */}
+          <div className="flex flex-col gap-3">
             <label className="text-sm text-muted">
-              {editingId ? "Adicionar mais fotos (opcional)" : "Fotos"}
+              {editingId
+                ? "Adicionar mais fotos (opcional)"
+                : "Fotos"}
             </label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              required={!editingId}
-              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-              className="text-sm text-muted"
-            />
+
+            <label className="cursor-pointer border border-dashed border-border p-4 transition-colors hover:border-accent">
+              {filePreviews.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {filePreviews.map((preview, index) => (
+                    <div
+                      key={preview}
+                      className="relative overflow-hidden"
+                    >
+                      <img
+                        src={preview}
+                        alt={`Prévia ${index + 1}`}
+                        className="aspect-square w-full object-cover"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+
+                          URL.revokeObjectURL(preview);
+
+                          setFiles((current) =>
+                            current.filter(
+                              (_, fileIndex) =>
+                                fileIndex !== index,
+                            ),
+                          );
+
+                          setFilePreviews((current) =>
+                            current.filter(
+                              (_, previewIndex) =>
+                                previewIndex !== index,
+                            ),
+                          );
+                        }}
+                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center bg-background/80 text-lg text-foreground transition-colors hover:bg-red-500 hover:text-white"
+                        aria-label={`Remover foto ${index + 1}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                  <span className="text-2xl">
+                    ＋
+                  </span>
+
+                  <span className="text-sm text-foreground">
+                    Selecionar fotos
+                  </span>
+
+                  <span className="text-xs text-muted">
+                    Você pode selecionar várias imagens
+                  </span>
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                required={!editingId}
+                onChange={(e) => {
+                  const selectedFiles = Array.from(
+                    e.target.files ?? [],
+                  );
+
+                  setFiles(selectedFiles);
+
+                  setFilePreviews(
+                    selectedFiles.map((file) =>
+                      URL.createObjectURL(file),
+                    ),
+                  );
+                }}
+                className="hidden"
+              />
+            </label>
+
             {files.length > 0 && (
               <span className="text-xs text-muted">
                 {files.length} arquivo(s) selecionado(s)
               </span>
             )}
           </div>
+
+          {/* IMAGEM DE GUIA */}
           <div className="flex flex-col gap-3">
             <label className="text-sm text-muted">
               Imagem de guia (opcional)
             </label>
 
-            {editingId && existingGuideImage && (
-              <div className="flex flex-col gap-2">
-                <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${existingGuideImage}`}
-                  alt={`Imagem de guia do evento`}
-                  className="max-h-64 w-full object-contain border border-border bg-black"
-                />
+            {editingId &&
+              existingGuideImage &&
+              !guideImageFile && (
+                <div className="flex flex-col gap-2">
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${existingGuideImage}`}
+                    alt="Imagem de guia do evento"
+                    className="max-h-64 w-full object-contain border border-border bg-black"
+                  />
 
-                <span className="text-xs text-muted">Imagem de guia atual</span>
-                <button
-                  type="button"
-                  onClick={handleDeleteGuideImage}
-                  className="w-fit text-sm text-red-400 hover:text-red-300"
-                >
-                  Excluir imagem de guia
-                </button>
-              </div>
-            )}
+                  <span className="text-xs text-muted">
+                    Imagem de guia atual
+                  </span>
 
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => setGuideImageFile(e.target.files?.[0] ?? null)}
-              className="text-sm text-muted"
-            />
+                  <button
+                    type="button"
+                    onClick={handleDeleteGuideImage}
+                    className="w-fit text-sm text-red-400 hover:text-red-300"
+                  >
+                    Excluir imagem de guia
+                  </button>
+                </div>
+              )}
 
-            {guideImageFile && (
-              <span className="text-xs text-muted">
-                Nova imagem: {guideImageFile.name}
-              </span>
-            )}
+            <label className="cursor-pointer border border-dashed border-border p-4 transition-colors hover:border-accent">
+              {guideImageFile ? (
+                <div className="relative flex flex-col gap-3">
+                  <img
+                    src={URL.createObjectURL(
+                      guideImageFile,
+                    )}
+                    alt="Prévia da imagem de guia"
+                    className="max-h-80 w-full object-contain"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setGuideImageFile(null);
+                    }}
+                    className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center bg-background/80 text-lg text-foreground transition-colors hover:bg-red-500 hover:text-white"
+                    aria-label="Remover imagem de guia"
+                  >
+                    ×
+                  </button>
+
+                  <span className="text-xs text-muted">
+                    Nova imagem: {guideImageFile.name}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                  <span className="text-2xl">
+                    ＋
+                  </span>
+
+                  <span className="text-sm text-foreground">
+                    Selecionar imagem de capa
+                  </span>
+
+                  <span className="text-xs text-muted">
+                    JPG, PNG ou WebP
+                  </span>
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) =>
+                  setGuideImageFile(
+                    e.target.files?.[0] ?? null,
+                  )
+                }
+                className="hidden"
+              />
+            </label>
           </div>
-          <div className="flex flex-col gap-2">
+
+          {/* VÍDEOS */}
+          <div className="flex flex-col gap-3">
             <label className="text-sm text-muted">
               {editingId
                 ? "Adicionar mais vídeos (opcional)"
                 : "Vídeos (opcional)"}
             </label>
 
-            <input
-              type="file"
-              accept="video/mp4,video/webm,video/quicktime"
-              multiple
-              onChange={(e) => setVideoFiles(Array.from(e.target.files ?? []))}
-              className="text-sm text-muted"
-            />
-
-            {editingId && existingVideos.length > 0 && (
-              <div className="mt-4 flex flex-col gap-3">
-                <span className="text-sm text-muted">Vídeos existentes</span>
-
+            {/* Upload de novos vídeos */}
+            <label className="cursor-pointer border border-dashed border-border p-4 transition-colors hover:border-accent">
+              {videoPreviews.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {existingVideos.map((video) => (
+                  {videoPreviews.map((preview, index) => (
                     <div
-                      key={video.id}
-                      className="overflow-hidden border border-border bg-black"
+                      key={preview}
+                      className="relative overflow-hidden border border-border bg-black"
                     >
                       <video
-                        src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.video_path}`}
+                        src={preview}
                         controls
                         preload="metadata"
-                        className="w-full"
+                        className="aspect-video w-full object-contain"
                       />
 
-                      <div className="flex justify-end border-t border-border bg-background p-2">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteVideo(video.id)}
-                          className="border border-border px-3 py-2 text-xs text-muted transition-colors hover:border-red-500 hover:text-red-500"
-                        >
-                          Excluir vídeo
-                        </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+
+                          URL.revokeObjectURL(preview);
+
+                          setVideoFiles((current) =>
+                            current.filter(
+                              (_, fileIndex) =>
+                                fileIndex !== index,
+                            ),
+                          );
+
+                          setVideoPreviews((current) =>
+                            current.filter(
+                              (_, previewIndex) =>
+                                previewIndex !== index,
+                            ),
+                          );
+                        }}
+                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center bg-background/80 text-lg text-foreground transition-colors hover:bg-red-500 hover:text-white"
+                        aria-label={`Remover vídeo ${index + 1}`}
+                      >
+                        ×
+                      </button>
+
+                      <div className="p-2">
+                        <span className="text-xs text-muted">
+                          Vídeo {index + 1}
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                  <span className="text-2xl">
+                    ＋
+                  </span>
+
+                  <span className="text-sm text-foreground">
+                    Selecionar vídeos
+                  </span>
+
+                  <span className="text-xs text-muted">
+                    MP4, WebM ou MOV • até 60 MB
+                  </span>
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                multiple
+                onChange={(e) => {
+                  const selectedFiles = Array.from(
+                    e.target.files ?? [],
+                  );
+
+                  setVideoFiles(selectedFiles);
+
+                  setVideoPreviews(
+                    selectedFiles.map((file) =>
+                      URL.createObjectURL(file),
+                    ),
+                  );
+                }}
+                className="hidden"
+              />
+            </label>
+
+            {/* Vídeos existentes */}
+            {editingId &&
+              existingVideos.length > 0 && (
+                <div className="mt-4 flex flex-col gap-3">
+                  <span className="text-sm text-muted">
+                    Vídeos existentes
+                  </span>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {existingVideos.map((video) => (
+                      <div
+                        key={video.id}
+                        className="overflow-hidden border border-border bg-black"
+                      >
+                        <video
+                          src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.video_path}`}
+                          controls
+                          preload="metadata"
+                          className="w-full"
+                        />
+
+                        <div className="flex justify-end border-t border-border bg-background p-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteVideo(video.id)
+                            }
+                            className="border border-border px-3 py-2 text-xs text-muted transition-colors hover:border-red-500 hover:text-red-500"
+                          >
+                            Excluir vídeo
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             {videoFiles.length > 0 && (
               <span className="text-xs text-muted">
@@ -379,8 +666,14 @@ export default function AdminEventosPage() {
               </span>
             )}
           </div>
-          {error && <p className="text-sm text-red-400">{error}</p>}
 
+          {error && (
+            <p className="text-sm text-red-400">
+              {error}
+            </p>
+          )}
+
+          {/* Botões */}
           <div className="flex gap-3">
             <button
               type="submit"
@@ -393,6 +686,7 @@ export default function AdminEventosPage() {
                   ? "Salvar alterações"
                   : "Cadastrar evento"}
             </button>
+
             {editingId && (
               <button
                 type="button"
@@ -406,33 +700,52 @@ export default function AdminEventosPage() {
         </form>
       </section>
 
+      {/* EVENTOS CADASTRADOS */}
       <section>
-        <h2 className="font-display text-2xl italic">Eventos cadastrados</h2>
+        <h2 className="font-display text-2xl italic">
+          Eventos cadastrados
+        </h2>
 
         {loading ? (
-          <p className="mt-6 text-muted">Carregando...</p>
+          <p className="mt-6 text-muted">
+            Carregando...
+          </p>
         ) : events.length === 0 ? (
-          <p className="mt-6 text-muted">Nenhum evento cadastrado ainda.</p>
+          <p className="mt-6 text-muted">
+            Nenhum evento cadastrado ainda.
+          </p>
         ) : (
           <div className="mt-6 flex flex-col gap-10">
             {events.map((event) => (
-              <div key={event.id} className="border-b border-border pb-8">
+              <div
+                key={event.id}
+                className="border-b border-border pb-8"
+              >
                 <div className="flex items-baseline justify-between">
                   <div>
-                    <h3 className="text-lg">{event.title}</h3>
+                    <h3 className="text-lg">
+                      {event.title}
+                    </h3>
+
                     <span className="text-sm text-muted">
                       {event.category?.name}
                     </span>
                   </div>
+
                   <div className="flex gap-3 text-sm">
                     <button
-                      onClick={() => startEdit(event)}
+                      onClick={() =>
+                        startEdit(event)
+                      }
                       className="text-accent hover:underline"
                     >
                       Editar
                     </button>
+
                     <button
-                      onClick={() => handleDeleteEvent(event.id)}
+                      onClick={() =>
+                        handleDeleteEvent(event.id)
+                      }
                       className="text-red-400 hover:underline"
                     >
                       Excluir evento
@@ -442,14 +755,26 @@ export default function AdminEventosPage() {
 
                 <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
                   {event.photos.map((photo) => (
-                    <div key={photo.id} className="group relative">
+                    <div
+                      key={photo.id}
+                      className="group relative"
+                    >
                       <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${photo.thumbnail_path ?? photo.image_path}`}
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${
+                          photo.thumbnail_path ??
+                          photo.image_path
+                        }`}
                         alt={event.title}
                         className="aspect-square w-full object-cover"
                       />
+
                       <button
-                        onClick={() => handleDeletePhoto(event.id, photo.id)}
+                        onClick={() =>
+                          handleDeletePhoto(
+                            event.id,
+                            photo.id,
+                          )
+                        }
                         className="absolute right-1 top-1 bg-background/80 px-2 py-1 text-xs text-red-400 opacity-0 transition-opacity group-hover:opacity-100"
                       >
                         Excluir
